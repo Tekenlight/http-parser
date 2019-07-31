@@ -2028,8 +2028,10 @@ strlncpy(char *dst, size_t len, const char *src, size_t n)
 }
 
 int
-request_url_cb (http_parser *p, const char *buf, size_t len)
+request_url_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   assert(p == &parser);
   strlncat(messages[num_messages].request_url,
            sizeof(messages[num_messages].request_url),
@@ -2039,8 +2041,10 @@ request_url_cb (http_parser *p, const char *buf, size_t len)
 }
 
 int
-header_field_cb (http_parser *p, const char *buf, size_t len)
+header_field_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   assert(p == &parser);
   struct message *m = &messages[num_messages];
 
@@ -2058,8 +2062,10 @@ header_field_cb (http_parser *p, const char *buf, size_t len)
 }
 
 int
-header_value_cb (http_parser *p, const char *buf, size_t len)
+header_value_cb (http_parser *p, const char *buf, size_t len,int intr)
 {
+	int i = intr;
+	i++;
   assert(p == &parser);
   struct message *m = &messages[num_messages];
 
@@ -2087,8 +2093,10 @@ check_body_is_final (const http_parser *p)
 }
 
 int
-body_cb (http_parser *p, const char *buf, size_t len)
+body_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   assert(p == &parser);
   strlncat(messages[num_messages].body,
            sizeof(messages[num_messages].body),
@@ -2101,8 +2109,10 @@ body_cb (http_parser *p, const char *buf, size_t len)
 }
 
 int
-count_body_cb (http_parser *p, const char *buf, size_t len)
+count_body_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   assert(p == &parser);
   assert(buf);
   messages[num_messages].body_size += len;
@@ -2166,8 +2176,10 @@ message_complete_cb (http_parser *p)
 }
 
 int
-response_status_cb (http_parser *p, const char *buf, size_t len)
+response_status_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   assert(p == &parser);
 
   messages[num_messages].status_cb_called = TRUE;
@@ -2219,32 +2231,40 @@ dontcall_message_begin_cb (http_parser *p)
 }
 
 int
-dontcall_header_field_cb (http_parser *p, const char *buf, size_t len)
+dontcall_header_field_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   if (p || buf || len) { } // gcc
   fprintf(stderr, "\n\n*** on_header_field() called on paused parser ***\n\n");
   abort();
 }
 
 int
-dontcall_header_value_cb (http_parser *p, const char *buf, size_t len)
+dontcall_header_value_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   if (p || buf || len) { } // gcc
   fprintf(stderr, "\n\n*** on_header_value() called on paused parser ***\n\n");
   abort();
 }
 
 int
-dontcall_request_url_cb (http_parser *p, const char *buf, size_t len)
+dontcall_request_url_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   if (p || buf || len) { } // gcc
   fprintf(stderr, "\n\n*** on_request_url() called on paused parser ***\n\n");
   abort();
 }
 
 int
-dontcall_body_cb (http_parser *p, const char *buf, size_t len)
+dontcall_body_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   if (p || buf || len) { } // gcc
   fprintf(stderr, "\n\n*** on_body_cb() called on paused parser ***\n\n");
   abort();
@@ -2269,8 +2289,10 @@ dontcall_message_complete_cb (http_parser *p)
 }
 
 int
-dontcall_response_status_cb (http_parser *p, const char *buf, size_t len)
+dontcall_response_status_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   if (p || buf || len) { } // gcc
   fprintf(stderr, "\n\n*** on_status() called on paused parser ***\n\n");
   abort();
@@ -2319,35 +2341,43 @@ pause_message_begin_cb (http_parser *p)
 }
 
 int
-pause_header_field_cb (http_parser *p, const char *buf, size_t len)
+pause_header_field_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   http_parser_pause(p, 1);
   *current_pause_parser = settings_dontcall;
-  return header_field_cb(p, buf, len);
+  return header_field_cb(p, buf, len, 0);
 }
 
 int
-pause_header_value_cb (http_parser *p, const char *buf, size_t len)
+pause_header_value_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   http_parser_pause(p, 1);
   *current_pause_parser = settings_dontcall;
-  return header_value_cb(p, buf, len);
+  return header_value_cb(p, buf, len, 0);
 }
 
 int
-pause_request_url_cb (http_parser *p, const char *buf, size_t len)
+pause_request_url_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   http_parser_pause(p, 1);
   *current_pause_parser = settings_dontcall;
-  return request_url_cb(p, buf, len);
+  return request_url_cb(p, buf, len, 0);
 }
 
 int
-pause_body_cb (http_parser *p, const char *buf, size_t len)
+pause_body_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   http_parser_pause(p, 1);
   *current_pause_parser = settings_dontcall;
-  return body_cb(p, buf, len);
+  return body_cb(p, buf, len, 0);
 }
 
 int
@@ -2367,11 +2397,13 @@ pause_message_complete_cb (http_parser *p)
 }
 
 int
-pause_response_status_cb (http_parser *p, const char *buf, size_t len)
+pause_response_status_cb (http_parser *p, const char *buf, size_t len, int intr)
 {
+	int i = intr;
+	i++;
   http_parser_pause(p, 1);
   *current_pause_parser = settings_dontcall;
-  return response_status_cb(p, buf, len);
+  return response_status_cb(p, buf, len, 0);
 }
 
 int

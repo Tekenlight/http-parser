@@ -85,7 +85,7 @@ typedef struct http_parser_settings http_parser_settings;
  * many times for each string. E.G. you might get 10 callbacks for "on_url"
  * each providing just a few characters more data.
  */
-typedef int (*http_data_cb) (http_parser*, const char *at, size_t length);
+typedef int (*http_data_cb) (http_parser*, const char *at, size_t length, int intr_ind);
 typedef int (*http_cb) (http_parser*);
 
 

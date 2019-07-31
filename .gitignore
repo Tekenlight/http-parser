@@ -28,3 +28,6 @@ parsertrace_g
 *.sdf
 *.vsp
 *.psess
+
+# Work directories
+testing

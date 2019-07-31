@@ -102,27 +102,58 @@ do {                                                                 \
 #define CALLBACK_NOTIFY_NOADVANCE(FOR)  CALLBACK_NOTIFY_(FOR, p - data)
 
 /* Run data callback FOR with LEN bytes, returning ER if it fails */
-#define CALLBACK_DATA_(FOR, LEN, ER)                                 \
-do {                                                                 \
-  assert(HTTP_PARSER_ERRNO(parser) == HPE_OK);                       \
-                                                                     \
-  if (FOR##_mark) {                                                  \
-    if (LIKELY(settings->on_##FOR)) {                                \
-      parser->state = CURRENT_STATE();                               \
-      if (UNLIKELY(0 !=                                              \
-                   settings->on_##FOR(parser, FOR##_mark, (LEN)))) { \
-        SET_ERRNO(HPE_CB_##FOR);                                     \
-      }                                                              \
-      UPDATE_STATE(parser->state);                                   \
-                                                                     \
-      /* We either errored above or got paused; get out */           \
-      if (UNLIKELY(HTTP_PARSER_ERRNO(parser) != HPE_OK)) {           \
-        return (ER);                                                 \
-      }                                                              \
-    }                                                                \
-    FOR##_mark = NULL;                                               \
-  }                                                                  \
+#define CALLBACK_DATA_INTR_(FOR, LEN, ER)                                    \
+do {                                                                    \
+  assert(HTTP_PARSER_ERRNO(parser) == HPE_OK);                          \
+                                                                        \
+  if (FOR##_mark) {                                                     \
+    if (LIKELY(settings->on_##FOR)) {                                   \
+      parser->state = CURRENT_STATE();                                  \
+      if (UNLIKELY(0 !=                                                 \
+                   settings->on_##FOR(parser, FOR##_mark, (LEN), 1))) { \
+        SET_ERRNO(HPE_CB_##FOR);                                        \
+      }                                                                 \
+      UPDATE_STATE(parser->state);                                      \
+                                                                        \
+      /* We either errored above or got paused; get out */              \
+      if (UNLIKELY(HTTP_PARSER_ERRNO(parser) != HPE_OK)) {              \
+        return (ER);                                                    \
+      }                                                                 \
+    }                                                                   \
+    FOR##_mark = NULL;                                                  \
+  }                                                                     \
 } while (0)
+
+/* Run data callback FOR with LEN bytes, returning ER if it fails */
+#define CALLBACK_DATA_(FOR, LEN, ER)                                    \
+do {                                                                    \
+  assert(HTTP_PARSER_ERRNO(parser) == HPE_OK);                          \
+                                                                        \
+  if (FOR##_mark) {                                                     \
+    if (LIKELY(settings->on_##FOR)) {                                   \
+      parser->state = CURRENT_STATE();                                  \
+      if (UNLIKELY(0 !=                                                 \
+                   settings->on_##FOR(parser, FOR##_mark, (LEN), 0))) { \
+        SET_ERRNO(HPE_CB_##FOR);                                        \
+      }                                                                 \
+      UPDATE_STATE(parser->state);                                      \
+                                                                        \
+      /* We either errored above or got paused; get out */              \
+      if (UNLIKELY(HTTP_PARSER_ERRNO(parser) != HPE_OK)) {              \
+        return (ER);                                                    \
+      }                                                                 \
+    }                                                                   \
+    FOR##_mark = NULL;                                                  \
+  }                                                                     \
+} while (0)
+
+/* Run the data callback FOR and consume the current byte */
+#define CALLBACK_DATA_INTR(FOR)                                           \
+    CALLBACK_DATA_INTR_(FOR, p - FOR##_mark, p - data + 1)
+
+/* Run the data callback FOR and don't consume the current byte */
+#define CALLBACK_DATA_NOADVANCE_INTR(FOR)                                 \
+    CALLBACK_DATA_INTR_(FOR, p - FOR##_mark, p - data)
 
 /* Run the data callback FOR and consume the current byte */
 #define CALLBACK_DATA(FOR)                                           \
@@ -2067,11 +2098,11 @@ reexecute:
           (body_mark ? 1 : 0) +
           (status_mark ? 1 : 0)) <= 1);
 
-  CALLBACK_DATA_NOADVANCE(header_field);
-  CALLBACK_DATA_NOADVANCE(header_value);
-  CALLBACK_DATA_NOADVANCE(url);
-  CALLBACK_DATA_NOADVANCE(body);
-  CALLBACK_DATA_NOADVANCE(status);
+  CALLBACK_DATA_NOADVANCE_INTR(header_field);
+  CALLBACK_DATA_NOADVANCE_INTR(header_value);
+  CALLBACK_DATA_NOADVANCE_INTR(url);
+  CALLBACK_DATA_NOADVANCE_INTR(body);
+  CALLBACK_DATA_NOADVANCE_INTR(status);
 
   RETURN(len);
 
@@ -2085,8 +2116,7 @@ error:
 
 
 /* Does the parser need to see an EOF to find the end of the message? */
-int
-http_message_needs_eof (const http_parser *parser)
+int http_message_needs_eof (const http_parser *parser)
 {
   if (parser->type == HTTP_REQUEST) {
     return 0;
@@ -2108,8 +2138,7 @@ http_message_needs_eof (const http_parser *parser)
 }
 
 
-int
-http_should_keep_alive (const http_parser *parser)
+int http_should_keep_alive (const http_parser *parser)
 {
   if (parser->http_major > 0 && parser->http_minor > 0) {
     /* HTTP/1.1 */
@@ -2127,14 +2156,12 @@ http_should_keep_alive (const http_parser *parser)
 }
 
 
-const char *
-http_method_str (enum http_method m)
+const char * http_method_str (enum http_method m)
 {
   return ELEM_AT(method_strings, m, "<unknown>");
 }
 
-const char *
-http_status_str (enum http_status s)
+const char * http_status_str (enum http_status s)
 {
   switch (s) {
 #define XX(num, name, string) case HTTP_STATUS_##name: return #string;
@@ -2144,8 +2171,7 @@ http_status_str (enum http_status s)
   }
 }
 
-void
-http_parser_init (http_parser *parser, enum http_parser_type t)
+void http_parser_init (http_parser *parser, enum http_parser_type t)
 {
   void *data = parser->data; /* preserve application data */
   memset(parser, 0, sizeof(*parser));
@@ -2162,19 +2188,21 @@ http_parser_settings_init(http_parser_settings *settings)
 }
 
 const char *
-http_errno_name(enum http_errno err) {
+http_errno_name(enum http_errno err)
+{
   assert(((size_t) err) < ARRAY_SIZE(http_strerror_tab));
   return http_strerror_tab[err].name;
 }
 
 const char *
-http_errno_description(enum http_errno err) {
+http_errno_description(enum http_errno err)
+{
   assert(((size_t) err) < ARRAY_SIZE(http_strerror_tab));
   return http_strerror_tab[err].description;
 }
 
-static enum http_host_state
-http_parse_host_char(enum http_host_state s, const char ch) {
+static enum http_host_state http_parse_host_char(enum http_host_state s, const char ch)
+{
   switch(s) {
     case s_http_userinfo:
     case s_http_userinfo_start:
@@ -2255,8 +2283,8 @@ http_parse_host_char(enum http_host_state s, const char ch) {
   return s_http_host_dead;
 }
 
-static int
-http_parse_host(const char * buf, struct http_parser_url *u, int found_at) {
+static int http_parse_host(const char * buf, struct http_parser_url *u, int found_at)
+{
   enum http_host_state s;
 
   const char *p;
@@ -2337,8 +2365,8 @@ http_parse_host(const char * buf, struct http_parser_url *u, int found_at) {
   return 0;
 }
 
-void
-http_parser_url_init(struct http_parser_url *u) {
+void http_parser_url_init(struct http_parser_url *u)
+{
   memset(u, 0, sizeof(*u));
 }
 
@@ -2465,8 +2493,8 @@ http_parser_parse_url(const char *buf, size_t buflen, int is_connect,
   return 0;
 }
 
-void
-http_parser_pause(http_parser *parser, int paused) {
+void http_parser_pause(http_parser *parser, int paused)
+{
   /* Users should only be pausing/unpausing a parser that is not in an error
    * state. In non-debug builds, there's not much that we can do about this
    * other than ignore it.
@@ -2480,19 +2508,19 @@ http_parser_pause(http_parser *parser, int paused) {
   }
 }
 
-int
-http_body_is_final(const struct http_parser *parser) {
+int http_body_is_final(const struct http_parser *parser)
+{
     return parser->state == s_message_done;
 }
 
-unsigned long
-http_parser_version(void) {
+unsigned long http_parser_version(void)
+{
   return HTTP_PARSER_VERSION_MAJOR * 0x10000 |
          HTTP_PARSER_VERSION_MINOR * 0x00100 |
          HTTP_PARSER_VERSION_PATCH * 0x00001;
 }
 
-void
-http_parser_set_max_header_size(uint32_t size) {
+void http_parser_set_max_header_size(uint32_t size)
+{
   max_header_size = size;
 }
