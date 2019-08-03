@@ -102,6 +102,29 @@ do {                                                                 \
 #define CALLBACK_NOTIFY_NOADVANCE(FOR)  CALLBACK_NOTIFY_(FOR, p - data)
 
 /* Run data callback FOR with LEN bytes, returning ER if it fails */
+#define CALLBACK_DATA_DISCARD_(FOR, LEN, ER)                                    \
+do {                                                                    \
+  assert(HTTP_PARSER_ERRNO(parser) == HPE_OK);                          \
+                                                                        \
+  if (FOR##_mark) {                                                     \
+    if (LIKELY(settings->on_##FOR)) {                                   \
+      parser->state = CURRENT_STATE();                                  \
+      if (UNLIKELY(0 !=                                                 \
+                   settings->on_##FOR(parser, FOR##_mark, (LEN), 2))) { \
+        SET_ERRNO(HPE_CB_##FOR);                                        \
+      }                                                                 \
+      UPDATE_STATE(parser->state);                                      \
+                                                                        \
+      /* We either errored above or got paused; get out */              \
+      if (UNLIKELY(HTTP_PARSER_ERRNO(parser) != HPE_OK)) {              \
+        return (ER);                                                    \
+      }                                                                 \
+    }                                                                   \
+    FOR##_mark = NULL;                                                  \
+  }                                                                     \
+} while (0)
+
+/* Run data callback FOR with LEN bytes, returning ER if it fails */
 #define CALLBACK_DATA_INTR_(FOR, LEN, ER)                                    \
 do {                                                                    \
   assert(HTTP_PARSER_ERRNO(parser) == HPE_OK);                          \
@@ -154,6 +177,14 @@ do {                                                                    \
 /* Run the data callback FOR and don't consume the current byte */
 #define CALLBACK_DATA_NOADVANCE_INTR(FOR)                                 \
     CALLBACK_DATA_INTR_(FOR, p - FOR##_mark, p - data)
+
+/* Run the data callback FOR and consume the current byte */
+#define CALLBACK_DATA_DISCARD(FOR)                                           \
+    CALLBACK_DATA_DISCARD_(FOR, p - FOR##_mark, p - data + 1)
+
+/* Run the data callback FOR and don't consume the current byte */
+#define CALLBACK_DATA_NOADVANCE_DISCARD(FOR)                                 \
+    CALLBACK_DATA_DISCARD_(FOR, p - FOR##_mark, p - data)
 
 /* Run the data callback FOR and consume the current byte */
 #define CALLBACK_DATA(FOR)                                           \
@@ -1404,7 +1435,7 @@ reexecute:
 
         if (ch == ':') {
           UPDATE_STATE(s_header_value_discard_ws);
-          CALLBACK_DATA(header_field);
+          CALLBACK_DATA_DISCARD(header_field);
           break;
         }
 
