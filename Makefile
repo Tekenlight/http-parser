@@ -72,6 +72,12 @@ else
 LDFLAGS_LIB += -Wl,-soname=$(SONAME)
 endif
 
+ifeq (darwin,$(PLATFORM))
+INSTALL_FLG=
+else
+INSTALL_FLG=-D
+endif
+
 test: test_g test_fast
 	$(HELPER) ./test_g$(BINEXT)
 	$(HELPER) ./test_fast$(BINEXT)
@@ -131,14 +137,14 @@ tags: http_parser.c http_parser.h test.c
 	ctags $^
 
 install: library
-	$(INSTALL) -D  http_parser.h $(DESTDIR)$(INCLUDEDIR)/http_parser.h
-	$(INSTALL) -D $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME)
+	$(INSTALL) $(INSTALL_FLG)  http_parser.h $(DESTDIR)$(INCLUDEDIR)/http_parser.h
+	$(INSTALL) $(INSTALL_FLG) $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME)
 	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
 	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
 
 install-strip: library
-	$(INSTALL) -D  http_parser.h $(DESTDIR)$(INCLUDEDIR)/http_parser.h
-	$(INSTALL) -D -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME)
+	$(INSTALL) $(INSTALL_FLG)  http_parser.h $(DESTDIR)$(INCLUDEDIR)/http_parser.h
+	$(INSTALL) $(INSTALL_FLG) -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME)
 	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
 	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
 

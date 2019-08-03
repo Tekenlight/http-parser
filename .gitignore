@@ -31,3 +31,7 @@ parsertrace_g
 
 # Work directories
 testing
+
+
+# Binary files
+libhttp_parser.2.9.2.dylib
