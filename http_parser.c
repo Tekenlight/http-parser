@@ -25,6 +25,8 @@
 #include <string.h>
 #include <limits.h>
 
+#include <stdio.h>
+
 static uint32_t max_header_size = HTTP_MAX_HEADER_SIZE;
 
 #ifndef ULLONG_MAX
@@ -2168,6 +2170,10 @@ int http_message_needs_eof (const http_parser *parser)
   return 1;
 }
 
+void http_version (char * s, const http_parser *parser)
+{
+	sprintf(s,"HTTP/%d.%d",parser->http_major, parser->http_minor);
+}
 
 int http_should_keep_alive (const http_parser *parser)
 {

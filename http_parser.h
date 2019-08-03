@@ -395,6 +395,10 @@ size_t http_parser_execute(http_parser *parser,
                            const char *data,
                            size_t len);
 
+/* http_version returns the requested vdrsion number as a string.
+ */
+void http_version(char *s, const http_parser *parser);
+
 
 /* If http_should_keep_alive() in the on_headers_complete or
  * on_message_complete callback returns 0, then this should be
