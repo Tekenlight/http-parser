@@ -408,6 +408,9 @@ void http_version(char *s, const http_parser *parser);
  */
 int http_should_keep_alive(const http_parser *parser);
 
+/* Tells whether the message will contain only the header. */
+int http_header_only_message(const http_parser *parser);
+
 /* Returns a string version of the HTTP method. */
 const char *http_method_str(enum http_method m);
 

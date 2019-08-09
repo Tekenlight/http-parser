@@ -1437,7 +1437,7 @@ reexecute:
 
         if (ch == ':') {
           UPDATE_STATE(s_header_value_discard_ws);
-          CALLBACK_DATA_DISCARD(header_field);
+          CALLBACK_DATA(header_field);
           break;
         }
 
@@ -1897,6 +1897,7 @@ reexecute:
 
         hasBody = parser->flags & F_CHUNKED ||
           (parser->content_length > 0 && parser->content_length != ULLONG_MAX);
+
         if (parser->upgrade && (parser->method == HTTP_CONNECT ||
                                 (parser->flags & F_SKIPBODY) || !hasBody)) {
           /* Exit, the rest of the message is in a different protocol. */
@@ -2147,6 +2148,41 @@ error:
   RETURN(p - data);
 }
 
+int http_header_only_message(const http_parser *parser)
+{
+	int hasBody;
+
+	hasBody = parser->flags & F_CHUNKED ||
+	  (parser->content_length > 0 && parser->content_length != ULLONG_MAX);
+
+	if (parser->upgrade && (parser->method == HTTP_CONNECT ||
+							(parser->flags & F_SKIPBODY) || !hasBody)) {
+		return 1;
+	}
+
+	if (parser->flags & F_SKIPBODY) {
+		return 1;
+	} else if (parser->flags & F_CHUNKED) {
+		/* chunked encoding - ignore Content-Length header */
+		return 0;
+	} else {
+		if (parser->content_length == 0) {
+			/* Content-Length header given but zero: Content-Length: 0\r\n */
+			return 1;
+		} else if (parser->content_length != ULLONG_MAX) {
+			/* Content-Length header given and non-zero */
+			return 0;
+		} else {
+			if (!http_message_needs_eof(parser)) {
+				/* Assume content-length 0 - read the next */
+				return 1;
+			} else {
+				/* Read body until EOF */
+				return 0;
+			}
+		}
+	}
+}
 
 /* Does the parser need to see an EOF to find the end of the message? */
 int http_message_needs_eof (const http_parser *parser)
