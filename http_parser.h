@@ -301,6 +301,8 @@ struct http_parser {
 
   uint32_t nread;          /* # bytes read in various scenarios */
   uint64_t content_length; /* # bytes in body (0 if no Content-Length header) */
+  uint64_t header_content_length; /* The field content_length gets used within http_parser_execute
+  									 This field stores the original value. */
 
   /** READ-ONLY **/
   unsigned short http_major;

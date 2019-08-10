@@ -793,6 +793,7 @@ reexecute:
           break;
         parser->flags = 0;
         parser->content_length = ULLONG_MAX;
+        parser->header_content_length = ULLONG_MAX;
 
         if (ch == 'H') {
           UPDATE_STATE(s_res_or_resp_H);
@@ -830,6 +831,7 @@ reexecute:
           break;
         parser->flags = 0;
         parser->content_length = ULLONG_MAX;
+        parser->header_content_length = ULLONG_MAX;
 
         if (ch == 'H') {
           UPDATE_STATE(s_res_H);
@@ -987,6 +989,7 @@ reexecute:
           break;
         parser->flags = 0;
         parser->content_length = ULLONG_MAX;
+        parser->header_content_length = ULLONG_MAX;
 
         if (UNLIKELY(!IS_ALPHA(ch))) {
           SET_ERRNO(HPE_INVALID_METHOD);
@@ -1617,6 +1620,7 @@ reexecute:
               }
 
               parser->content_length = t;
+              parser->header_content_length = t;
               break;
             }
 
@@ -2153,7 +2157,7 @@ int http_header_only_message(const http_parser *parser)
 	int hasBody;
 
 	hasBody = parser->flags & F_CHUNKED ||
-	  (parser->content_length > 0 && parser->content_length != ULLONG_MAX);
+	  (parser->header_content_length > 0 && parser->header_content_length != ULLONG_MAX);
 
 	if (parser->upgrade && (parser->method == HTTP_CONNECT ||
 							(parser->flags & F_SKIPBODY) || !hasBody)) {
@@ -2166,10 +2170,10 @@ int http_header_only_message(const http_parser *parser)
 		/* chunked encoding - ignore Content-Length header */
 		return 0;
 	} else {
-		if (parser->content_length == 0) {
+		if (parser->header_content_length == 0) {
 			/* Content-Length header given but zero: Content-Length: 0\r\n */
 			return 1;
-		} else if (parser->content_length != ULLONG_MAX) {
+		} else if (parser->header_content_length != ULLONG_MAX) {
 			/* Content-Length header given and non-zero */
 			return 0;
 		} else {
