@@ -24,7 +24,7 @@ BINEXT ?=
 SOLIBNAME = libhttp_parser
 SOMAJOR = 2
 SOMINOR = 9
-SOREV   = 2
+SOREV   = 4
 ifeq (darwin,$(PLATFORM))
 SOEXT ?= dylib
 SONAME ?= $(SOLIBNAME).$(SOMAJOR).$(SOMINOR).$(SOEXT)
@@ -139,14 +139,14 @@ tags: http_parser.c http_parser.h test.c
 install: library
 	$(INSTALL) $(INSTALL_FLG)  http_parser.h $(DESTDIR)$(INCLUDEDIR)/http_parser.h
 	$(INSTALL) $(INSTALL_FLG) $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME)
-	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
-	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
+	ln -sf $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
+	ln -sf $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
 
 install-strip: library
 	$(INSTALL) $(INSTALL_FLG)  http_parser.h $(DESTDIR)$(INCLUDEDIR)/http_parser.h
 	$(INSTALL) $(INSTALL_FLG) -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME)
-	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
-	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
+	ln -sf $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
+	ln -sf $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
 
 uninstall:
 	rm $(DESTDIR)$(INCLUDEDIR)/http_parser.h
