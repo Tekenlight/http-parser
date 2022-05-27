@@ -15,6 +15,7 @@ parsertrace_g
 *.exe.*
 *.exe
 *.a
+#.dylib
 
 
 # Visual Studio uglies
@@ -34,4 +35,4 @@ testing
 
 
 # Binary files
-libhttp_parser.2.9.2.dylib
+libhttp_parser.2.9.4.dylib
