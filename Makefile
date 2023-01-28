@@ -24,7 +24,7 @@ BINEXT ?=
 SOLIBNAME = libhttp_parser
 SOMAJOR = 2
 SOMINOR = 9
-SOREV   = 4
+SOREV   = 2
 ifeq (darwin,$(PLATFORM))
 SOEXT ?= dylib
 SONAME ?= $(SOLIBNAME).$(SOMAJOR).$(SOMINOR).$(SOEXT)
@@ -52,18 +52,21 @@ CPPFLAGS_FAST = $(CPPFLAGS) -DHTTP_PARSER_STRICT=0
 CPPFLAGS_FAST += $(CPPFLAGS_FAST_EXTRA)
 CPPFLAGS_BENCH = $(CPPFLAGS_FAST)
 
-CFLAGS += -Wall -Wextra -Werror
+#CFLAGS += -Wall -Wextra -Werror
+CFLAGS += -arch arm64 -arch x86_64 -Wall -Wextra -Werror
 CFLAGS_DEBUG = $(CFLAGS) -O0 -g $(CFLAGS_DEBUG_EXTRA)
 CFLAGS_FAST = $(CFLAGS) -O3 $(CFLAGS_FAST_EXTRA)
 CFLAGS_BENCH = $(CFLAGS_FAST) -Wno-unused-parameter
 CFLAGS_LIB = $(CFLAGS_FAST) -fPIC
 
+#LDFLAGS+= -arch arm64 -arch x86_64
+
 LDFLAGS_LIB = $(LDFLAGS) -shared
 
 INSTALL ?= install
 PREFIX ?= /usr/local
-LIBDIR = $(PREFIX)/lib
-INCLUDEDIR = $(PREFIX)/include
+LIBDIR = $(PREFIX)/lib/evlua
+INCLUDEDIR = $(PREFIX)/include/evlua
 
 ifeq (darwin,$(PLATFORM))
 LDFLAGS_LIB += -Wl,-install_name,$(LIBDIR)/$(SONAME)
@@ -139,14 +142,14 @@ tags: http_parser.c http_parser.h test.c
 install: library
 	$(INSTALL) $(INSTALL_FLG)  http_parser.h $(DESTDIR)$(INCLUDEDIR)/http_parser.h
 	$(INSTALL) $(INSTALL_FLG) $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME)
-	ln -sf $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
-	ln -sf $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
+	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
+	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
 
 install-strip: library
 	$(INSTALL) $(INSTALL_FLG)  http_parser.h $(DESTDIR)$(INCLUDEDIR)/http_parser.h
 	$(INSTALL) $(INSTALL_FLG) -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME)
-	ln -sf $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
-	ln -sf $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
+	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
+	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
 
 uninstall:
 	rm $(DESTDIR)$(INCLUDEDIR)/http_parser.h
