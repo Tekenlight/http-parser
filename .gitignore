@@ -1,6 +1,7 @@
 /out/
 core
 tags
+gtags
 *.o
 test
 test_g
@@ -35,4 +36,5 @@ testing
 
 
 # Binary files
+libhttp_parser.2.9.2.dylib
 libhttp_parser.2.9.4.dylib
