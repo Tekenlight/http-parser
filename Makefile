@@ -52,8 +52,8 @@ CPPFLAGS_FAST = $(CPPFLAGS) -DHTTP_PARSER_STRICT=0
 CPPFLAGS_FAST += $(CPPFLAGS_FAST_EXTRA)
 CPPFLAGS_BENCH = $(CPPFLAGS_FAST)
 
-#CFLAGS += -Wall -Wextra -Werror
-CFLAGS += -arch arm64 -arch x86_64 -Wall -Wextra -Werror
+CFLAGS += -Wall -Wextra -Werror
+#CFLAGS += -arch arm64 -arch x86_64 -Wall -Wextra -Werror
 CFLAGS_DEBUG = $(CFLAGS) -O0 -g $(CFLAGS_DEBUG_EXTRA)
 CFLAGS_FAST = $(CFLAGS) -O3 $(CFLAGS_FAST_EXTRA)
 CFLAGS_BENCH = $(CFLAGS_FAST) -Wno-unused-parameter
@@ -65,11 +65,11 @@ LDFLAGS_LIB = $(LDFLAGS) -shared
 
 INSTALL ?= install
 PREFIX ?= /usr/local
-LIBDIR = $(PREFIX)/lib/evlua
-INCLUDEDIR = $(PREFIX)/include/evlua
+LIBDIR = $(PREFIX)/lib/evpoco
+INCLUDEDIR = $(PREFIX)/include/evpoco
 
 ifeq (darwin,$(PLATFORM))
-LDFLAGS_LIB += -Wl,-install_name,$(LIBDIR)/$(SONAME)
+LDFLAGS_LIB += -Wl,-install_name,@rpath/$(SONAME)
 else
 # TODO(bnoordhuis) The native SunOS linker expects -h rather than -soname...
 LDFLAGS_LIB += -Wl,-soname=$(SONAME)
@@ -159,7 +159,7 @@ uninstall:
 
 clean:
 	rm -f *.o *.a tags test test_fast test_g \
-		http_parser.tar libhttp_parser.so.* \
+		http_parser.tar libhttp_parser.so.* libhttp_parser*.dylib \
 		url_parser url_parser_g parsertrace parsertrace_g \
 		*.exe *.exe.so
 
