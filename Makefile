@@ -59,7 +59,7 @@ CFLAGS_FAST = $(CFLAGS) -O3 $(CFLAGS_FAST_EXTRA)
 CFLAGS_BENCH = $(CFLAGS_FAST) -Wno-unused-parameter
 CFLAGS_LIB = $(CFLAGS_FAST) -fPIC
 
-#LDFLAGS+= -arch arm64 -arch x86_64
+LDFLAGS+= -arch arm64 -arch x86_64
 
 LDFLAGS_LIB = $(LDFLAGS) -shared
 
