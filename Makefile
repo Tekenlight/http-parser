@@ -70,7 +70,7 @@ LIBDIR = $(PREFIX)/lib/evpoco
 INCLUDEDIR = $(PREFIX)/include/evpoco
 
 ifeq (darwin,$(PLATFORM))
-LDFLAGS_LIB += -Wl,-install_name,@rpath/$(SONAME)
+LDFLAGS_LIB += -Wl,-install_name,$(LIBDIR)/$(SONAME)
 else
 # TODO(bnoordhuis) The native SunOS linker expects -h rather than -soname...
 LDFLAGS_LIB += -Wl,-soname=$(SONAME)
