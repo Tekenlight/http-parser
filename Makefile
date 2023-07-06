@@ -25,6 +25,8 @@ SOLIBNAME = libhttp_parser
 SOMAJOR = 2
 SOMINOR = 9
 SOREV   = 2
+AREXT ?= a
+STATIC_LIBNAME ?= $(SOLIBNAME).$(AREXT)
 ifeq (darwin,$(PLATFORM))
 SOEXT ?= dylib
 SONAME ?= $(SOLIBNAME).$(SOMAJOR).$(SOMINOR).$(SOEXT)
@@ -140,23 +142,33 @@ parsertrace_g: http_parser_g.o contrib/parsertrace.c
 tags: http_parser.c http_parser.h test.c
 	ctags $^
 
-install: library
+install: library package
 	$(INSTALL) $(INSTALL_FLG)  http_parser.h $(DESTDIR)$(INCLUDEDIR)/http_parser.h
 	$(INSTALL) $(INSTALL_FLG) $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME)
+	$(INSTALL) $(INSTALL_FLG) $(STATIC_LIBNAME) $(DESTDIR)$(LIBDIR)/$(STATIC_LIBNAME)
+	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
+	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
+
+install_all: package library
+	$(INSTALL) $(INSTALL_FLG)  http_parser.h $(DESTDIR)$(INCLUDEDIR)/http_parser.h
+	$(INSTALL) $(INSTALL_FLG) $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME)
+	$(INSTALL) $(INSTALL_FLG) $(STATIC_LIBNAME) $(DESTDIR)$(LIBDIR)/$(STATIC_LIBNAME)
 	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
 	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
 
 install-strip: library
 	$(INSTALL) $(INSTALL_FLG)  http_parser.h $(DESTDIR)$(INCLUDEDIR)/http_parser.h
 	$(INSTALL) $(INSTALL_FLG) -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME)
+	$(INSTALL) $(INSTALL_FLG) $(STATIC_LIBNAME) $(DESTDIR)$(LIBDIR)/$(STATIC_LIBNAME)
 	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
 	ln -s $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
 
 uninstall:
-	rm $(DESTDIR)$(INCLUDEDIR)/http_parser.h
-	rm $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
-	rm $(DESTDIR)$(LIBDIR)/$(SONAME)
-	rm $(DESTDIR)$(LIBDIR)/$(LIBNAME)
+	rm -f $(DESTDIR)$(INCLUDEDIR)/http_parser.h
+	rm -f $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(SOEXT)
+	rm -f $(DESTDIR)$(LIBDIR)/$(SOLIBNAME).$(AREXT)
+	rm -f $(DESTDIR)$(LIBDIR)/$(LIBNAME)
+	rm -f $(DESTDIR)$(LIBDIR)/$(SONAME)
 
 clean:
 	rm -f *.o *.a tags test test_fast test_g \
