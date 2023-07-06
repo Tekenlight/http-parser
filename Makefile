@@ -67,7 +67,7 @@ LDFLAGS+=
 LDFLAGS_LIB = $(LDFLAGS) -shared
 
 INSTALL ?= install
-PREFIX ?= /usr/local
+PREFIX ?= /usr
 LIBDIR = $(PREFIX)/lib/evpoco
 INCLUDEDIR = $(PREFIX)/include/evpoco
 
