@@ -1513,6 +1513,7 @@ reexecute:
 
             parser->flags |= F_CONTENTLENGTH;
             parser->content_length = ch - '0';
+            parser->header_content_length = parser->content_length;
             parser->header_state = h_content_length_num;
             break;
 
